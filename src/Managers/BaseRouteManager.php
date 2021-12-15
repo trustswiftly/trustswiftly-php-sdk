@@ -18,7 +18,7 @@ class BaseRouteManager{
      * @return string
      */
     public function getFinalBaseUrl($base_url){
-        return $base_url.'/account';
+        return $base_url;
     }
 
 
