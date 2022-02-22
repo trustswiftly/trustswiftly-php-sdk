@@ -5,9 +5,11 @@ namespace TrustSwiftly;
 use TrustSwiftly\Api\Statistics\StatisticsApiClient;
 use TrustSwiftly\Api\Templates\TemplateApiClient;
 use TrustSwiftly\Api\Users\UserApiClient;
+use TrustSwiftly\Api\Validation\CredentialValidationClient;
 use TrustSwiftly\Managers\ConfigManager;
 use GuzzleHttp\Client as Guzzle;
 use TrustSwiftly\Security\EmbedSignature;
+use TrustSwiftly\Security\ValidationSignature;
 use TrustSwiftly\Security\WebhookSignature;
 
 
@@ -23,6 +25,12 @@ class TrustSwiftly{
      * @var Guzzle
      */
     protected $guzzle;
+
+    /**
+     *
+     * @var TrustSwiftly
+     */
+    private static $instance;
 
     /**
      * @param $api_key
@@ -41,6 +49,15 @@ class TrustSwiftly{
             ];
             $this->setConfig($configs);
             $this->guzzle=new Guzzle();
+    }
+
+    public static function getInstance($api_key,$base_url,$api_secret=null,$embed_key=null)
+    {
+        if ( is_null( self::$instance ) )
+        {
+            self::$instance = new self($api_key,$base_url,$api_secret,$embed_key);
+        }
+        return self::$instance;
     }
 
     /**
@@ -83,6 +100,13 @@ class TrustSwiftly{
     }
 
     /**
+     * @return CredentialValidationClient
+     */
+    public function credentialValidationClient(){
+        return (new CredentialValidationClient($this->guzzle,$this->trustConfigs));
+    }
+
+    /**
      * @param $user_id
      * @return string
      * @throws Exceptions\ConfigException
@@ -90,6 +114,16 @@ class TrustSwiftly{
      */
     public function getEmbedSignature($user_id){
         return (new EmbedSignature($this->trustConfigs))->createSignature($user_id);
+    }
+
+    /**
+     * @param $user_id
+     * @return string
+     * @throws Exceptions\ConfigException
+     * @throws Exceptions\RequiredParameterMissing
+     */
+    public function getVerifyCredentailsSignature(){
+        return (new ValidationSignature($this->trustConfigs))->createSignature();
     }
 
     /**
@@ -101,6 +135,28 @@ class TrustSwiftly{
      */
     public static function verifyWebhookSignature($receivedSignature,$content,$signatureSecret){
         return (new WebhookSignature())->verifyWebhookSignature($receivedSignature,$content,$signatureSecret);
+    }
+
+    /**
+     * @param $api_key
+     * @param $base_url
+     * @param null $embed_key
+     * @return mixed|CredentialValidationClient
+     * @throws Exceptions\ApiException
+     * @throws Exceptions\ConfigException
+     * @throws Exceptions\RequiredParameterMissing
+     */
+
+    public static function validateCredentials($api_key,$base_url,$api_secret = null,$embed_key = null){
+        $currentObject = self::getInstance($api_key,$base_url,$api_secret,$embed_key);
+
+        $validateCredentialsClient=$currentObject->credentialValidationClient();
+
+        return $validateCredentialsClient->verifyCredentials([
+            'embed_key'=>$embed_key,
+            'signature'=>$currentObject->getVerifyCredentailsSignature(),
+        ]);
+
     }
 
 }

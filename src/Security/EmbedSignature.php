@@ -24,8 +24,8 @@ class EmbedSignature{
      * @throws ConfigException
      * @throws RequiredParameterMissing
      */
-    public function createSignature($user_id){
-        if (empty($user_id)){
+    public function createSignature($user_id, $ignore_userId = false){
+        if (!$ignore_userId && empty($user_id)){
             throw new RequiredParameterMissing("Required Parameter user_id Missing");
         }
         if (empty($this->configs->getApiSecret())){
