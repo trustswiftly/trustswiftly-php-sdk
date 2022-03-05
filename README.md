@@ -9,9 +9,12 @@ Our official API documentation is at [TrustSwifly Integration Documentation](htt
 ### With Composer
 
 ```
-composer require trustswifly/php-sdk
+composer require trustswifly/trustswiftly-php-sdk
 ```
 
+```
+"trustswiftly/trustswiftly-php-sdk": "^1.0"
+```
 
 ## Usage
 
