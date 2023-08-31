@@ -197,7 +197,9 @@ class Client {
     public function checkResponse($response){
         $responseBody=$response->getResponseBody();
         $responseArray=json_decode($responseBody,true);
-        if (array_key_exists('error_type',$responseArray)){
+        if (array_key_exists('error',$responseArray)){
+            throw new ApiException($responseArray['error']['error_message']);
+        }elseif (array_key_exists('error_type',$responseArray)){
             throw new ApiException($responseArray['error_message']);
         }else{
             return true;
